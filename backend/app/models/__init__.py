@@ -8,6 +8,9 @@ from app.models.budget import Budget
 from app.models.policy import SpendingPolicy
 from app.models.merchant import Merchant
 from app.models.product import Product
+from app.models.category import Category, Subcategory
+from app.models.marketplace_provider import MarketplaceProvider
+from app.models.search_log import SearchLog
 from app.models.agent import Agent
 from app.models.payment_request import PaymentRequest
 from app.models.approval import Approval
@@ -18,6 +21,7 @@ from app.models.agent_tool_call import AgentToolCall
 
 __all__ = [
     "User", "Budget", "SpendingPolicy", "Merchant", "Product",
+    "Category", "Subcategory", "MarketplaceProvider", "SearchLog",
     "Agent", "PaymentRequest", "Approval", "Transaction",
     "AuditLog", "WebhookEvent", "AgentToolCall",
 ]

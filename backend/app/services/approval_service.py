@@ -49,7 +49,47 @@ async def create_payment_request(
     prod_res = await db.execute(select(Product).where(Product.id == product_id))
     product = prod_res.scalar_one_or_none()
     if not product:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
+        from app.marketplace.provider_manager import MarketplaceProviderManager
+        norm_prod = await MarketplaceProviderManager.get_product_by_id(db, product_id)
+        if norm_prod:
+            # Resolve or create merchant record
+            merch_res = await db.execute(select(Merchant).where(Merchant.name == norm_prod.merchant))
+            merchant = merch_res.scalar_one_or_none()
+            if not merchant:
+                merchant = Merchant(
+                    id=norm_prod.merchant_id or f"m-{norm_prod.provider_code}-auto",
+                    name=norm_prod.merchant,
+                    category=norm_prod.category,
+                    is_verified=True,
+                    is_active=True,
+                )
+                db.add(merchant)
+                await db.flush()
+
+            product = Product(
+                id=norm_prod.id,
+                merchant_id=merchant.id,
+                name=norm_prod.name,
+                description=norm_prod.description,
+                price_paise=norm_prod.price_paise,
+                original_price_paise=int(norm_prod.original_price_inr * 100) if norm_prod.original_price_inr else None,
+                category=norm_prod.category,
+                subcategory=norm_prod.subcategory,
+                brand=norm_prod.brand,
+                image_url=norm_prod.image_url,
+                product_url=norm_prod.product_url,
+                provider_code=norm_prod.provider_code,
+                provider_name=norm_prod.provider,
+                data_source_type=norm_prod.data_source_type,
+                rating=norm_prod.rating,
+                rating_count=norm_prod.rating_count,
+                supports_integrated_checkout=norm_prod.supports_integrated_checkout,
+                is_available=norm_prod.is_available,
+            )
+            db.add(product)
+            await db.flush()
+        else:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Product not found")
 
     if not product.is_available:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Product is not currently available")

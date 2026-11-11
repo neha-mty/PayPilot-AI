@@ -18,6 +18,7 @@ from app.routes.transaction import router as transaction_router
 from app.routes.audit_log import router as audit_log_router
 from app.routes.assistant import router as assistant_router
 from app.routes.dashboard import router as dashboard_router
+from app.routes.marketplace import router as marketplace_router
 
 
 @asynccontextmanager
@@ -56,6 +57,7 @@ app.include_router(transaction_router)
 app.include_router(audit_log_router)
 app.include_router(assistant_router)
 app.include_router(dashboard_router)
+app.include_router(marketplace_router)
 
 
 @app.get("/health")

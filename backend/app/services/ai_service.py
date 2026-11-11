@@ -1,29 +1,30 @@
-"""AI Purchasing Assistant Service.
+"""AI Purchasing Assistant Service for Universal Marketplace Discovery.
 
-Uses Google Gemini API when GEMINI_API_KEY is present; otherwise provides
-an intelligent deterministic fallback simulation for offline/local evaluation.
+Uses Google Gemini API when configured; otherwise provides deterministic,
+high-precision intent parsing and marketplace recommendation synthesis.
 """
 import re
 import json
 from typing import Dict, Any, List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.merchant_service import search_products
-from app.services.approval_service import create_payment_request
+from app.services.nlp_classifier import NLPQueryClassifier
+from app.marketplace.provider_manager import MarketplaceProviderManager
 from app.config import get_settings
 
 settings = get_settings()
 
-SYSTEM_PROMPT = """
-You are PayPilot AI, a secure purchasing assistant.
-Your role is to understand user purchase requests, search available product catalogs,
-compare options based on price, category, and user constraints, and recommend the best options.
+UNIVERSAL_SYSTEM_PROMPT = """
+You are PayPilot AI, a secure universal marketplace purchasing assistant.
+Your role is to understand user purchase requests across ANY product or service category,
+search configured and accessible marketplaces, compare options based on price and features,
+and recommend the best verified options.
 
 SECURITY RULES:
 1. You DO NOT have authority to make payments or transfer money.
 2. You can only search products and recommend options.
-3. Once the user picks a product, you can request a payment authorization.
-4. You must never invent or assume prices — always use verified prices from the catalog.
+3. Once the user picks a product, you can create a payment request.
+4. You must never invent or assume prices — always use verified prices from the marketplace results.
 5. All payment authorization is handled by the deterministic backend policy engine and the user.
 """
 
@@ -34,34 +35,23 @@ class AIAssistantService:
         db: AsyncSession,
         user_id: str,
         message: str,
-        agent_type: str = "food",
+        agent_type: str = "universal",
     ) -> Dict[str, Any]:
-        """Process natural language request, execute discovery, and return recommendations."""
-        msg_lower = message.lower()
+        """Process natural language request, dynamically detect category/intent, search multi-providers, and return unified results."""
+        # Classify intent dynamically
+        intent = NLPQueryClassifier.classify_query(message)
 
-        # Parse constraints from natural language
-        vegetarian_only = "veg" in msg_lower and "non-veg" not in msg_lower
-        
-        # Extract budget/price constraint (e.g., "under 200", "under ₹200", "below 1000")
-        max_price_paise = None
-        price_match = re.search(r"(?:under|below|max|within|less than)\s*(?:₹|rs\.?|inr)?\s*(\d+)", msg_lower)
-        if price_match:
-            max_price_paise = int(price_match.group(1)) * 100
-
-        # Determine category based on agent_type or query
-        category = "Food" if agent_type == "food" else "Electronics"
-        if "electronic" in msg_lower or "earphone" in msg_lower or "mouse" in msg_lower or "charger" in msg_lower:
-            category = "Electronics"
-        elif "shop" in msg_lower or "bag" in msg_lower or "bottle" in msg_lower or "lamp" in msg_lower:
-            category = "Shopping"
-
-        # Search authoritative catalog
-        products = await search_products(
+        # Multi-provider parallel search
+        normalized_products = await MarketplaceProviderManager.search_all_marketplaces(
             db=db,
-            query=None,
-            category=category,
-            max_price_paise=max_price_paise,
-            vegetarian_only=vegetarian_only,
+            query=message,
+            category=intent["detected_category"],
+            subcategory=intent["detected_subcategory"],
+            brand=intent["detected_brand"],
+            provider_code=intent["detected_provider_code"],
+            min_price_paise=intent["min_price_paise"],
+            max_price_paise=intent["max_price_paise"],
+            limit=6,
         )
 
         recommendations = [
@@ -70,66 +60,92 @@ class AIAssistantService:
                 "name": p.name,
                 "description": p.description,
                 "price_paise": p.price_paise,
-                "price_inr": p.price_paise / 100,
+                "price_inr": p.price_inr,
+                "original_price_inr": p.original_price_inr,
+                "discount_percent": p.discount_percent,
                 "category": p.category,
+                "subcategory": p.subcategory,
+                "brand": p.brand,
+                "merchant": p.merchant,
                 "merchant_id": p.merchant_id,
+                "provider": p.provider,
+                "provider_code": p.provider_code,
+                "image_url": p.image_url,
+                "product_url": p.product_url,
                 "is_available": p.is_available,
+                "data_source_type": p.data_source_type,
+                "rating": p.rating,
+                "rating_count": p.rating_count,
+                "supports_integrated_checkout": p.supports_integrated_checkout,
+                "delivery_info": p.delivery_info,
             }
-            for p in products[:4]
+            for p in normalized_products
         ]
 
-        # If Gemini API key is configured, use it for friendly conversational response
+        # Conversational summary
         if settings.GEMINI_API_KEY:
             try:
                 import google.generativeai as genai
                 genai.configure(api_key=settings.GEMINI_API_KEY)
                 model = genai.GenerativeModel("gemini-1.5-flash")
                 prompt = f"""
-{SYSTEM_PROMPT}
+{UNIVERSAL_SYSTEM_PROMPT}
 
 User query: "{message}"
-Matching products found from verified catalog:
+Detected Category: {intent['detected_category']} (Subcategory: {intent['detected_subcategory']})
+Detected Brand/Provider: {intent['detected_brand']} ({intent['detected_provider_code']})
+Budget: max {intent['max_price_paise']/100 if intent['max_price_paise'] else 'None'} INR
+
+Marketplace Search Results:
 {json.dumps(recommendations, indent=2)}
 
-Please provide a helpful, concise summary of the recommendations.
-Remind the user that selecting an option will create a payment request subject to policy engine checks and their explicit approval.
+Provide a concise, professional comparison summary.
+State which provider each option is from, highlight key features, and remind the user
+that selecting any option will submit it to PayPilot's centralized spending-policy engine for validation.
 """
                 resp = model.generate_content(prompt)
                 reply_text = resp.text
             except Exception:
-                reply_text = AIAssistantService._generate_fallback_reply(
-                    message, recommendations, vegetarian_only, max_price_paise
-                )
+                reply_text = AIAssistantService._generate_fallback_reply(message, intent, recommendations)
         else:
-            reply_text = AIAssistantService._generate_fallback_reply(
-                message, recommendations, vegetarian_only, max_price_paise
-            )
+            reply_text = AIAssistantService._generate_fallback_reply(message, intent, recommendations)
 
         return {
             "reply": reply_text,
             "agent_type": agent_type,
+            "detected_intent": intent,
             "recommendations": recommendations,
-            "action_taken": "catalog_searched",
+            "action_taken": "multi_provider_marketplace_search",
         }
 
     @staticmethod
     def _generate_fallback_reply(
-        message: str, recommendations: List[Dict[str, Any]], vegetarian_only: bool, max_price_paise: Optional[int]
+        message: str, intent: Dict[str, Any], recommendations: List[Dict[str, Any]]
     ) -> str:
         constraints = []
-        if vegetarian_only:
-            constraints.append("dietary preference: Vegetarian")
-        if max_price_paise:
-            constraints.append(f"budget: under ₹{max_price_paise/100:.2f}")
+        if intent.get("detected_category"):
+            constraints.append(f"Category: {intent['detected_category']}")
+        if intent.get("detected_brand"):
+            constraints.append(f"Brand: {intent['detected_brand']}")
+        if intent.get("max_price_paise"):
+            constraints.append(f"Budget: Under ₹{intent['max_price_paise']/100:,.2f}")
+        if intent.get("vegetarian_only"):
+            constraints.append("Dietary: Vegetarian")
 
         constraint_str = f" ({', '.join(constraints)})" if constraints else ""
 
         if not recommendations:
-            return f"I understood your request{constraint_str}, but couldn't find any products in our verified catalog matching those exact criteria. Would you like to adjust your budget or preferences?"
+            return (
+                f"I searched configured marketplaces for your request{constraint_str}, "
+                "but couldn't find matching items within the specified criteria. "
+                "You can try expanding your budget or adjusting the search keywords."
+            )
 
-        items_str = ", ".join([f"**{r['name']}** (₹{r['price_inr']:.2f})" for r in recommendations])
+        items_str = ", ".join([f"**{r['name']}** from *{r['provider']}* (₹{r['price_inr']:,.2f})" for r in recommendations[:3]])
         return (
-            f"I found {len(recommendations)} matching options{constraint_str}: {items_str}.\n\n"
-            "🛡️ **Security note:** I have prepared recommendations based on verified merchant catalog prices. "
-            "Please select a product below to create a payment request. The transaction will be checked by your spending-policy engine before any authorization."
+            f"🔍 Found {len(recommendations)} matching items across supported marketplaces{constraint_str}.\n\n"
+            f"Top matches include: {items_str}.\n\n"
+            "🛡️ **Security & Policy Notice:** Prices and availability are fetched from verified provider feeds. "
+            "Select any item below to inspect details or create a policy-checked payment request. "
+            "No funds will be authorized without your explicit approval."
         )

@@ -1,13 +1,14 @@
 """End-to-end integration scenario testing for PayPilot AI."""
 import httpx
 import pytest
+from app.main import app
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://testserver"
 
 
 @pytest.mark.asyncio
 async def test_complete_purchasing_and_security_scenarios():
-    async with httpx.AsyncClient(base_url=BASE_URL, timeout=10.0) as client:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url=BASE_URL, timeout=10.0) as client:
         # 1. Health check
         res = await client.get("/health")
         assert res.status_code == 200
