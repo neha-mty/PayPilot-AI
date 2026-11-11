@@ -1,5 +1,5 @@
 """Marketplace Provider Registry for PayPilot AI."""
-from typing import Dict, List, Type, Optional
+from typing import Dict, List, Optional
 from app.marketplace.base_provider import BaseMarketplaceProvider
 from app.marketplace.lenskart_adapter import LenskartMarketplaceAdapter
 from app.marketplace.furniture_adapter import FurnitureMarketplaceAdapter
@@ -8,6 +8,7 @@ from app.marketplace.jewellery_adapter import JewelleryMarketplaceAdapter
 from app.marketplace.travel_adapter import TravelMarketplaceAdapter
 from app.marketplace.fashion_appliances_adapter import RetailAppliancesMarketplaceAdapter
 from app.marketplace.dynamic_adapter import DynamicCategoryMarketplaceAdapter
+from app.marketplace.web_search_adapter import InternetWebSearchAdapter
 
 
 class MarketplaceRegistry:
@@ -17,6 +18,7 @@ class MarketplaceRegistry:
 
     def _initialize_default_providers(self):
         providers = [
+            InternetWebSearchAdapter(),
             LenskartMarketplaceAdapter(),
             FurnitureMarketplaceAdapter(),
             ElectronicsMarketplaceAdapter(),

@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     # AI
     GEMINI_API_KEY: str = ""
 
+    # Web Search & External Intelligence (Optional API Keys)
+    TAVILY_API_KEY: str = ""
+    SERPAPI_API_KEY: str = ""
+    BRAVE_SEARCH_API_KEY: str = ""
+
     # Payment
     PAYMENT_PROVIDER: str = "simulated"  # "simulated" or "razorpay"
     RAZORPAY_KEY_ID: str = ""

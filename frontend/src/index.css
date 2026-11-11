@@ -1,36 +1,33 @@
 @import 'tailwindcss';
 
-/* PayPilot AI — Blue, Grey & Orange Fintech Design System */
+/* PayPilot AI — Exact Brand Palette:
+   Deep Ocean Blue:    #022E51
+   Steel Blue Grey:    #A3B4C8
+   Burnt Orange:       #CC6D3D
+   Deep Burnt Orange:  #B74803
+*/
 :root {
-  --color-primary: #2563eb;        /* Primary Blue */
-  --color-primary-dark: #1d4ed8;   /* Darker Blue */
-  --color-primary-light: #dbeafe;  /* Soft Blue Background */
-  --color-secondary: #60a5fa;      /* Sky Blue */
-  
-  --color-accent: #f97316;         /* Orange Accent for key actions/badges */
-  --color-accent-dark: #ea580c;    /* Deep Orange */
-  --color-accent-light: #ffedd5;   /* Soft Orange Tint */
+  --color-primary: #022E51;          /* Deep Ocean Blue: Navigation, branding, primary headers */
+  --color-secondary: #A3B4C8;        /* Steel Blue Grey: Surfaces, cards, neutral borders */
+  --color-accent: #CC6D3D;           /* Burnt Orange: Primary action buttons, badges, highlights */
+  --color-accent-dark: #B74803;      /* Deep Burnt Orange: Hover states, critical emphasis */
 
-  --color-success: #10b981;        /* Emerald */
-  --color-warning: #f59e0b;        /* Amber */
-  --color-danger: #ef4444;         /* Rose Red */
-  
-  --color-bg: #f8fafc;            /* Clean light grey slate background */
-  --color-surface: #ffffff;       /* Pure white card surface */
-  --color-text-main: #0f172a;     /* Deep slate heading text */
-  --color-text-muted: #64748b;    /* Medium slate neutral text */
-  --color-border: #e2e8f0;        /* Subtle border grey */
+  --color-bg: #F4F7FA;              /* Light, clean slate grey background */
+  --color-card: #FFFFFF;            /* Clean card background */
+  --color-text-dark: #022E51;       /* Deep Ocean Blue text */
+  --color-text-muted: #5A6D82;      /* Slate grey text */
+  --color-border: #D2DCE6;          /* Clean steel border */
 }
 
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--color-bg);
-  color: var(--color-text-main);
+  color: var(--color-text-dark);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Custom modern scrollbar */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -39,14 +36,13 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #A3B4C8;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #022E51;
 }
 
-/* Animation utilities */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
