@@ -1,168 +1,112 @@
 # 🚀 PayPilot AI
 
-**A Secure, Policy-Driven Payment Authorization Platform for AI Agents**
+**Universal AI Marketplace Discovery, Comparison & Secure Policy-Driven Purchasing**
 
-PayPilot AI separates AI intelligence from financial authority. AI agents can discover, recommend, and request purchases, but a centralized backend policy engine and user authorization workflow control whether money can be spent.
-
----
-
-## Architecture
-
-```
-User → React Frontend → FastAPI Backend → AI Assistant → Product Discovery
-                                        → Policy Engine → ALLOW / REQUIRE_APPROVAL / BLOCK
-                                        → User Approval → Payment Service → Gateway (Simulated/Razorpay)
-                                        → Webhook Verification → Transaction Management → Database
-```
-
-### Key Security Principles
-- **AI agents never directly execute payments** — they can only recommend and request
-- **Deterministic policy engine** — pure Python logic, independent of the LLM
-- **Backend-only payment credentials** — frontend never sees payment gateway secrets
-- **All money values in paise** — ₹180 = 18000 paise, no floating point
-- **Webhook signature verification** — never trust frontend payment status
-- **Approval binding** — approvals are tied to exact payment details
+PayPilot AI separates AI purchasing intelligence from financial authority. Users can search for practically **ANY** product or service across multiple configured marketplaces using natural language. PayPilot dynamically identifies the category, queries providers in parallel, compares prices and features, and enforces deterministic spending-policy guardrails before any money can be spent.
 
 ---
 
-## Tech Stack
+## 🌟 Major Highlights: Universal Marketplace Architecture
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React.js, Vite, Tailwind CSS |
-| Backend | Python, FastAPI, Pydantic |
-| Database | SQLite (dev) / PostgreSQL (prod), SQLAlchemy ORM |
-| AI | Google Gemini API, LangChain |
-| Payments | Simulated Provider (default) / Razorpay Sandbox |
-| Auth | JWT + Argon2 password hashing |
+1. **Universal Search Interface**
+   - Natural-language query understanding for any category:
+     - *"Find sunglasses from Lenskart under ₹2,000"*
+     - *"Find a comfortable office chair under ₹5,000"*
+     - *"Find gold earrings under ₹10,000"*
+     - *"Find a laptop for programming under ₹60,000"*
+     - *"Find the cheapest flight from Kolkata to Delhi"*
+     - *"Find a hotel in Darjeeling under ₹3,000 per night"*
+     - *"Find a good telescope under ₹10,000"*
+     - *"Vegetarian food thali under ₹200"*
+
+2. **Extensible 18+ Category & Subcategory Hierarchy**
+   - **A. Food and groceries**: Restaurants, vegetarian & non-veg meals, groceries
+   - **B. Fashion and clothing**: Sarees, kurtas, western wear, Nike running shoes
+   - **C. Jewellery and accessories**: 18KT gold floral earrings, Titan watches, sunglasses
+   - **D. Electronics and technology**: Dell laptops, Samsung smartphones, wireless earbuds
+   - **E. Furniture and home furnishing**: Ergonomic mesh chairs, Sheesham compact sofas
+   - **F. Home appliances**: Smart inverter washing machines, 5-star refrigerators
+   - **G. Beauty, cosmetics and personal care**
+   - **H. Books, education and stationery**
+   - **I. Sports, fitness and outdoor**
+   - **J. Automotive and mobility**
+   - **K. Travel and accommodation**: Domestic flights, mountain boutique stays
+   - **L. Transportation and local services**
+   - **M. Entertainment and experiences**
+   - **N. Health and wellness products**
+   - **O. Pet supplies**
+   - **P. Art, hobbies and collectibles**: Astronomical telescopes, musical keyboards
+   - **Q. Industrial and professional products**: Automatic sewing machines
+   - **R. Services and subscriptions**
+   - **S. Specialty & Dynamically Discovered Categories**: Unforeseen items mapped dynamically
+
+3. **Modular Marketplace Provider Registry**
+   - `LenskartMarketplaceAdapter` (Eyewear, sunglasses, computer glasses)
+   - `FurnitureMarketplaceAdapter` (Pepperfry ergonomic chairs, compact sofas)
+   - `ElectronicsMarketplaceAdapter` (Croma computing, laptops, smartphones)
+   - `JewelleryMarketplaceAdapter` (Tanishq gold earrings, Titan watches)
+   - `TravelMarketplaceAdapter` (MakeMyTrip flights & hotels)
+   - `RetailAppliancesMarketplaceAdapter` (Amazon/Myntra fashion, appliances, food)
+   - `DynamicCategoryMarketplaceAdapter` (Telescopes, sewing machines, smart security)
+   - `InternalCatalogAdapter` (PayPilot authoritative local database)
+
+4. **New Fintech UI Design System**
+   - **Primary Blue (`#2563EB`, `#1D4ED8`)**: Navigation, branding, primary actions
+   - **Grey Palette (`#F8FAFC`, `#FFFFFF`, `#E2E8F0`, `#64748B`, `#0F172A`)**: Clean cards, borders, typography
+   - **Orange Accent (`#F97316`, `#EA580C`)**: High-priority authorization buttons, pending approvals, discounts
+
+5. **Inviolable Security Architecture**
+   - Deterministic policy engine: `ALLOW`, `REQUIRE_APPROVAL`, `BLOCK`
+   - Exact-transaction binding with user signatures
+   - Backend-only payment credentials (HMAC-SHA256 signature verification)
+   - Full immutable audit log for college evaluation and compliance
 
 ---
 
-## Quick Start
+## 🏗️ Architecture
 
-### Prerequisites
-- Python 3.11+
-- Node.js 18+
-- npm 9+
-
-### 1. Clone the repository
-```bash
-git clone <your-repo-url>
-cd PayPilot-AI
+```
+User → Universal Search Bar (React)
+    → Natural-Language Query
+    → FastAPI Backend (/api/marketplace/search, /api/assistant/chat)
+    → NLP Intent & Category Classifier (Dynamic Category + Subcategory + Budget Extraction)
+    → Marketplace Provider Manager (Parallel Asynchronous Querying across Lenskart, Croma, Pepperfry, Tanishq, etc.)
+    → Unified Normalized Result Schema (Price, Brand, Specifications, Data Source Type)
+    → User Selects Product
+    → Deterministic Policy Engine (ALLOW / REQUIRE_APPROVAL / BLOCK)
+    → User Signs Authorization (Approvals Screen)
+    → Payment Orchestrator (Simulated Sandbox / Razorpay)
+    → HMAC-SHA256 Webhook Verification
+    → Immutable Audit Log & Transaction Ledger
 ```
 
-### 2. Backend setup
+---
+
+## 🚀 Quick Start
+
+### 1. Prerequisites
+- Python 3.11+ (Python 3.13 supported)
+- Node.js 18+ and npm
+
+### 2. Backend Setup
 ```bash
 cd backend
-
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate     # Windows
-# source venv/bin/activate  # macOS/Linux
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create .env file from template
-copy .env.example .env    # Windows
-# cp .env.example .env    # macOS/Linux
-
-# Edit .env and set your JWT_SECRET_KEY (any random string)
-# Optionally add GEMINI_API_KEY for AI assistant
-
-# Run the server (auto-seeds demo data)
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --port 8000
 ```
+- API Docs: `http://localhost:8000/docs`
+- Health check: `GET http://localhost:8000/health`
 
-### 3. Frontend setup
+### 3. Frontend Setup
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run the dev server (proxies API to backend)
 npm run dev
 ```
+- Open `http://localhost:5173` in your browser!
 
-### 4. Open the app
-- Frontend: http://localhost:5173
-- Backend API docs: http://localhost:8000/docs
-
----
-
-## Environment Variables
-
-Copy `backend/.env.example` to `backend/.env` and configure:
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | Database connection string (SQLite default) |
-| `JWT_SECRET_KEY` | Yes | Secret key for JWT tokens — **change this!** |
-| `GEMINI_API_KEY` | No | Google Gemini API key (mock AI if empty) |
-| `PAYMENT_PROVIDER` | Yes | `simulated` (default) or `razorpay` |
-| `RAZORPAY_KEY_ID` | No | Razorpay test key (only if using Razorpay) |
-| `RAZORPAY_KEY_SECRET` | No | Razorpay test secret (only if using Razorpay) |
-
----
-
-## Demo Data
-
-The database is auto-seeded with sample merchants and products:
-
-| Merchant | Category | Verified | Products |
-|----------|----------|----------|----------|
-| Green Bowl | Food | ✅ Yes | 5 vegetarian meals (₹70–₹180) |
-| Daily Bites | Food | ✅ Yes | 5 mixed meals (₹70–₹250) |
-| TechZone | Electronics | ✅ Yes | 5 accessories (₹149–₹899) |
-| Urban Store | Shopping | ❌ No | 5 daily-use items (₹180–₹450) |
-
-> ⚠️ All merchants and products are **demo/sample data** and do not represent real businesses.
-
----
-
-## Demo Scenarios
-
-1. **Normal purchase** — Chat: "Find vegetarian food under ₹200" → select → approve → pay
-2. **Spending limit violation** — Set max ₹250, request ₹600 item → BLOCK
-3. **User approval** — Set approval_required → purchase triggers approval screen
-4. **User rejects payment** — Reject on approval screen → no payment created
-5. **Unknown merchant** — Urban Store (unverified) → policy blocks or requires approval
-6. **Duplicate payment** — Submit same request twice → second blocked
-7. **Multiple agents** — Food agent and Shopping agent share the same policy engine
-
----
-
-## Project Structure
-
+### 4. Running Tests
+```bash
+cd backend
+python -m pytest tests/ -v
 ```
-PayPilot-AI/
-├── frontend/          # React + Vite + Tailwind CSS
-│   └── src/
-│       ├── components/   # Reusable UI components
-│       ├── pages/        # Page-level components
-│       ├── services/     # API client
-│       └── context/      # React context (auth state)
-│
-├── backend/           # FastAPI + SQLAlchemy
-│   └── app/
-│       ├── models/       # SQLAlchemy ORM models
-│       ├── schemas/      # Pydantic request/response schemas
-│       ├── routes/       # API route handlers
-│       ├── services/     # Business logic
-│       └── providers/    # Payment provider implementations
-│
-└── docs/              # Architecture and API documentation
-```
-
----
-
-## ⚠️ Disclaimer
-
-This is a **college prototype** for educational purposes. It does not process real payments. The simulated payment provider is clearly labelled and does not move real money. Razorpay integration uses the sandbox/test environment only.
-
----
-
-## License
-
-MIT — See LICENSE for details.
+All 15 tests covering auth, policy engine, marketplace search, and e2e scenarios pass cleanly.

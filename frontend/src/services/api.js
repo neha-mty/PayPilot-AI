@@ -67,7 +67,16 @@ export const merchantAPI = {
 
 // === AI Assistant APIs ===
 export const assistantAPI = {
-  chat: (message, agentType = 'food') => api.post('/assistant/chat', { message, agent_type: agentType }),
+  chat: (message, agentType = 'universal') => api.post('/assistant/chat', { message, agent_type: agentType }),
+};
+
+// === Universal Marketplace APIs ===
+export const marketplaceAPI = {
+  search: (params = {}) => api.get('/marketplace/search', { params }),
+  getCategories: () => api.get('/marketplace/categories'),
+  getProviders: () => api.get('/marketplace/providers'),
+  getProduct: (id) => api.get(`/marketplace/product/${id}`),
+  detectIntent: (query) => api.post('/marketplace/detect-intent', { query }),
 };
 
 // === Payment Request APIs ===

@@ -1,5 +1,5 @@
 /**
- * Audit Logs Page.
+ * Audit Logs Page with Blue, Grey, and Orange design system.
  * Visual security trail showing all policy decisions, approval actions,
  * price tampering attempts, duplicate detection events, and webhook validations.
  */
@@ -22,7 +22,7 @@ export default function AuditLogs() {
         actor_type: actorFilter || undefined,
         limit: 50,
       });
-      setLogs(res.data);
+      setLogs(res.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -46,66 +46,84 @@ export default function AuditLogs() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 mb-4 gap-3">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-200 mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <span>🔍</span> Security Audit & Event Trail
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold mb-2">
+            <span>🔍 Immutable Audit Trail</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Security & Audit Logs
           </h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            Immutable log of all policy evaluations, authorization decisions, and gateway webhook events.
+          <p className="text-slate-600 text-sm mt-1">
+            Tamper-evident event log recording policy triggers, approvals, and gateway events.
           </p>
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 font-semibold">Filter Actor:</span>
+        <div className="flex items-center gap-2">
           <select
             value={actorFilter}
             onChange={(e) => setActorFilter(e.target.value)}
-            className="px-3 py-1.5 border border-slate-300 rounded-lg outline-none bg-white font-medium"
+            className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs cursor-pointer"
           >
             <option value="">All Actors</option>
             <option value="user">User</option>
             <option value="agent">AI Agent</option>
-            <option value="system">Policy Engine / System</option>
+            <option value="system">Policy Engine System</option>
             <option value="payment_provider">Payment Gateway</option>
           </select>
+          <button
+            onClick={loadLogs}
+            className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition cursor-pointer shadow-xs"
+          >
+            🔄 Refresh
+          </button>
         </div>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-slate-400">Loading audit trail...</div>
+          <div className="p-8 text-center text-slate-400 text-xs">Loading audit events...</div>
         ) : logs.length === 0 ? (
-          <div className="p-8 text-center text-slate-400">
-            <span className="text-3xl block mb-2">📜</span>
-            <p className="font-medium text-slate-600">No audit events recorded yet.</p>
+          <div className="p-12 text-center text-slate-400 text-xs">
+            No audit events found for this filter.
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
-            {logs.map((log) => (
-              <div key={log.id} className="p-4 hover:bg-slate-50/70 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[10px] ${getActorBadge(log.actor_type)}`}>
-                      {log.actor_type}
-                    </span>
-                    <strong className="text-slate-900 font-mono text-[11px]">{log.action}</strong>
-                    {log.payment_request_id && (
-                      <span className="text-slate-400 font-mono text-[10px]">
-                        req:#{log.payment_request_id.slice(0, 8)}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider">
+                <tr>
+                  <th className="py-3 px-4">Action</th>
+                  <th className="py-3 px-4">Actor</th>
+                  <th className="py-3 px-4">Payment Request</th>
+                  <th className="py-3 px-4">Details & Rationale</th>
+                  <th className="py-3 px-4">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {logs.map((log) => (
+                  <tr key={log.id} className="hover:bg-slate-50/70 transition">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
+                      {log.action}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2 py-0.5 rounded-md font-semibold text-[11px] ${getActorBadge(log.actor_type)}`}>
+                        {log.actor_type}
                       </span>
-                    )}
-                  </div>
-                  <p className="text-slate-600 pl-1">{log.decision_reason || '—'}</p>
-                </div>
-
-                <div className="text-slate-400 text-[11px] whitespace-nowrap sm:text-right">
-                  {new Date(log.created_at).toLocaleString()}
-                </div>
-              </div>
-            ))}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono text-slate-500">
+                      {log.payment_request_id ? log.payment_request_id.slice(0, 8) : '—'}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600 max-w-md">
+                      {log.decision_reason || '—'}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-400 whitespace-nowrap">
+                      {new Date(log.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
